@@ -1,41 +1,67 @@
-# YUNG's Extras for Horizon
+# YUNG's Extras — a Horizon port
 
-The swamp and desert decoration of YUNG's Extras (upstream
-`yungnickyoung/YUNGs-Extras`, LGPL-3.0-only, version 1.21.1-NeoForge-5.1.1),
-carried to Minecraft **26.3** on Horizon's mod API **0.2**.
+**YUNG's Extras** is a Minecraft mod. Extra structures and vanilla+ content added throughout Minecraft. This repository is a **port of it to [Horizon](https://github.com/horizon-rust/horizon)**, the Rust engine for Minecraft Java 26.3. It carries the complete source of the port plus the content files it ships, and installs as a single `.hmod` package.
 
-The mod is eleven Java *feature types* that place one structure template at a
-feature's origin, plus one Java placement-modifier type that reseeds the
-placement random. Horizon has no feature-type registration for a mod, so this
-package places **one family** and carries the rest.
+Upstream: [YUNG-GANG/YUNGs-Extras](https://github.com/YUNG-GANG/YUNGs-Extras) — licence **LGPL-3.0-only**.
 
-## What places
+| | |
+|---|---|
+| Upstream mod | YUNG's Extras ([source](https://github.com/YUNG-GANG/YUNGs-Extras)) |
+| Ported to | Horizon 0b14f8a, Minecraft Java 26.3, mod API `0.2` |
+| Package | `yungsextras.hmod` (install it with the Horizon launcher) |
+| Licence | **LGPL-3.0-only** — the upstream mod's licence; see [Licence and credit](#licence-and-credit) |
 
-**The swamp arch** — 11 templates. They generate in swamp biomes
-(`#yungsextras:has_structure/swamp_structures`) in the `surface_structures` step
-at the mod's own rarity (1 in 2400 per chunk per template), on the surface, in
-one of 11 ruined stone-brick forms, with the mod's own marker processing: the
-arch's gray-glass leg becomes randomly mossy/cracked stone bricks and is run
-down to the ground, and its stone bricks and stairs take the mod's weights
-(45 % mossy, 45 % cracked, else plain; 60 % mossy stairs).
+## What this port implements
 
-## What does not place (carried, `blocked`)
+| Family (`type`) | templates | dir | config | placement |
+| `yungsextras:swamp_arch` | 11 | `swamp/arch` | `location` | **shipped** |
+| `yungsextras:swamp_double_arch` | 22 | `swamp/double_arch` | `location` | blocked |
+| `yungsextras:swamp_cubby` | 8 | `swamp/cubby` | `location` | blocked |
+| `yungsextras:swamp_pillar` | 3 | `swamp/pillar` | `location` | blocked |
+| `yungsextras:swamp_church` | 1 | `swamp/misc` | `location` | blocked |
+| `yungsextras:swamp_ogre` | 1 | `swamp/misc` | `location` | blocked |
+| `yungsextras:desert_well` | 9 | `desert/wells` | `location`, `radius` | blocked |
+| `yungsextras:desert_obelisk` | 4 | `desert/obelisk` | `location` | blocked |
 
-The other ten families — desert wells, obelisks, ruins, the giant torch and the
-chillzone; swamp double arches, pillars, cubbies, the church and the ogre. Their
-configured features name `yungsextras:desert_well`, `yungsextras:swamp_cubby` and
-their siblings, and their placement chains end in `yungsextras:rng_initializer`;
-a content mod cannot register either type at this pin. Their templates still
-ship, so every piece can be placed by hand:
+## Not yet ported
+
+- **The generated arch is not asserted** (above): the descriptor and processors are
+- **Ten families place nowhere.** Their templates are `/place template`-able and a
+- **No `rng_initializer`, no offset-block terrain checks** (deviations 1 and 2).
+- **The wells' markers stay glass.** Their `brown`/`yellow_stained_glass` markers are
+- **No diagnostics.** The SDK exports no logger and a native mod may not add a crate;
+- **`side = both`** because the content and the worldgen it feeds belong to the server,
+
+## Installing
+
+1. Install the [Horizon launcher](https://github.com/horizon-rust/horizon/releases) (0.2.70 or newer).
+2. Add `yungsextras.hmod` to the instance's mods.
+3. The package is pinned to a specific Horizon build; the launcher checks that pin.
+
+## Licence and credit
+
+YUNG's Extras was created by its upstream authors; the code, models and assets in the original mod
+remain theirs and are used here under **LGPL-3.0-only**. The Rust in this repository is a clean-room
+rewrite for Horizon, not a translation of the original source.
+
+- `LICENSE` — the upstream licence text.
+- `LICENSE-NOTICE.md` — what this port carries and where it came from.
+- The upstream project: https://github.com/YUNG-GANG/YUNGs-Extras
+
+## Technical details
 
 ```
-/place template yungsextras:desert/wells/well_lg
-/place template yungsextras:swamp/misc/swamp_church
+horizon-mod.toml   package manifest (id, version, api, [native] pin)
+Cargo.toml         the crate; depends on `horizon-mod-api` from the fetched SDK
+src/               lib.rs (the one `impl Hooks`), runtime.rs (pure logic + tests), glue
+assets/ data/      the content the package ships
+tools/             content generators and the e2e scenario
 ```
 
-## Licence
+- Build: `cargo horizon-mod build` (packages; it does not compile against the game).
+- Test: `cargo test`, `cargo clippy --all-targets -- -D warnings`.
+- In-game: `ports/tools/launcher-game.sh run yungsextras` in the campaign tree, or install the
+  `.hmod` and play; the harness scenario is `tools/e2e.sh`.
 
-LGPL-3.0-only. `LICENSE` is the GNU Lesser General Public License version 3 as
-the upstream jar ships it; `LICENSE-NOTICE.md` names the upstream authors, the
-jar and where each file came from. The complete corresponding source of this
-port is this package's own `Cargo.toml`, `src/` and `tools/`.
+This repository is generated from the campaign's port at `ports/yungsextras/`; the port's own
+`notes.md` is the full record (decisions, traps, evidence).
